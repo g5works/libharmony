@@ -11,13 +11,24 @@ seq_id = None
 
 class HBThread(threading.Thread):
      
-    def __init__(self, name):
+    def __init__(self, name, gateway, int):
         threading.Thread.__init__(self)
         self.name = name
+        self.gateway = gateway
+        self.int = int
 
     def run(self):
         global seq_id
         while True:
+
+            print('Sending Heartbeat')
+            hbr = json.dumps({ "op": 1, "d": seq_id })
+            print(hbr)
+            asyncio.run(self.gateway.send(hbr))
+            print('Sent Heartbeat')
+            time.sleep((self.int/1000))
+                
+
             
 
 
@@ -37,22 +48,8 @@ class DiscordClient:
 
         print('connecting')
 
-        async def heartbeat(gw, hb):
-            print('Starting Gateway Heartbeat Thread')
-
-            print('Starting Heartbeat Loop')
 
 
-            while True:
-
-
-                print('Sending Heartbeat')
-                hbr = json.dumps({ "op": 1, "d": None })
-                print(hbr)
-                await gw.send(hbr)
-                print('Sent Heartbeat')
-                time.sleep((hb/1000))
-                
 
 
 
@@ -85,7 +82,9 @@ class DiscordClient:
             await gateway.send(ident)
             print('Sent identifier')
 
-            await heartbeat(gateway, hb_int)
+            th1 = HBThread('Discord Heartbeat Thread')
+            th1.start()
+
 
     async def disconnect(self):
         print("Disconnecting...")
