@@ -9,31 +9,8 @@ import asyncio
 
 seq_id = None
 
-class HBThread(threading.Thread):
-     
-    def __init__(self, name, gateway, int):
-        threading.Thread.__init__(self)
-        self.name = name
-        self.gateway = gateway
-        self.int = int
-
-    def run(self):
-        global seq_id
-        while True:
-
-            print('Sending Heartbeat')
-            hbr = json.dumps({ "op": 1, "d": seq_id })
-            print(hbr)
-            asyncio.run(self.gateway.send(hbr))
-            print('Sent Heartbeat')
-            time.sleep((self.int/1000))
-                
-
-            
-
 
 class DiscordClient:
-
     def __init__(self, token: str):
 
         self.token = token
@@ -47,14 +24,6 @@ class DiscordClient:
     async def connect(self):
 
         print('connecting')
-
-
-
-
-
-
-
-
 
 
         async with connect(self.url) as gateway:
@@ -81,9 +50,30 @@ class DiscordClient:
 
             await gateway.send(ident)
             print('Sent identifier')
+            
+            
+            
+            def gatewaywrapper(g, i):
+                asyncio.set_event_loop(asyncio.new_event_loop())
+                asyncio.get_event_loop().create_task(gatewayhb(g, i))
+            
+            async def gatewayhb(g, i):
+                while True:
 
-            th1 = HBThread('Discord Heartbeat Thread', gateway, hb_int)
-            th1.start()
+                    print(f"Interval: {i/1000}")
+
+                    print('Sending Heartbeat')
+                    hbr = json.dumps({ "op": 1, "d": None })
+                    print(hbr)                
+                    await g.send(hbr)
+                    print('Sent Heartbeat')
+                    await asyncio.sleep((i/1000))
+
+                
+                    
+
+            _thread = threading.Thread(target=gatewaywrapper, args=(gateway, hb_int))
+            _thread.start()
 
 
     async def disconnect(self):
@@ -162,7 +152,6 @@ class DiscordClient:
         
         except rq.Timeout:
             print('The request to Discord timed out.')
-    
 
 class Me: 
 

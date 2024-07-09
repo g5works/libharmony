@@ -20,9 +20,11 @@ if __name__ == '__main__':
 
         s = (await client.me.getGuildList())
         print('we got user guilds asyncly')
-
         print(s)
-  
+
+
+        while True:
+            None
 
 
 
