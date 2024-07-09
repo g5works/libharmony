@@ -82,7 +82,7 @@ class DiscordClient:
             await gateway.send(ident)
             print('Sent identifier')
 
-            th1 = HBThread('Discord Heartbeat Thread')
+            th1 = HBThread('Discord Heartbeat Thread', gateway, hb_int)
             th1.start()
 
 
@@ -186,7 +186,8 @@ class Me:
     
 
     async def getGuildList(self):
-        guilds = [DiscordGuild(i, self._get, self._del, self._send) for i in (await asyncio.to_thread(self._get('users/@me/guilds')))[0]]
+        loop = asyncio.get_event_loop()
+        guilds = [DiscordGuild(i, self._get, self._del, self._send) for i in (await loop.run_in_executor(None, self._get, 'users/@me/guilds'))[0]]
         return guilds
 
 
